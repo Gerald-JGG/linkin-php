@@ -25,7 +25,7 @@
         <div class="collapse navbar-collapse" id="navbarNav">
           <ul class="navbar-nav ms-auto">
             <li class="nav-item">
-              <a class="nav-link" href="login.html">Iniciar Sesión</a>
+              <a class="nav-link" href="login.php">Iniciar Sesión</a>
             </li>
             <li class="nav-item">
               <a class="btn btn-light ms-2" href="register.html">Registrarse</a>
