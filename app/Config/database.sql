@@ -8,7 +8,7 @@ CREATE TABLE roles (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ==========================================================
--- Table: users
+-- Table: users.
 -- ==========================================================
 CREATE TABLE users (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -40,7 +40,7 @@ CREATE TABLE user_roles (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ==========================================================
--- Table: vehicles
+-- Table: vehicles.
 -- ==========================================================
 CREATE TABLE vehicles (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -62,7 +62,7 @@ CREATE TABLE vehicles (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ==========================================================
--- Table: rides
+-- Table: rides.
 -- ==========================================================
 CREATE TABLE rides (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -85,7 +85,7 @@ CREATE TABLE rides (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ==========================================================
--- Table: bookings
+-- Table: bookings.
 -- ==========================================================
 CREATE TABLE bookings (
     id INT AUTO_INCREMENT PRIMARY KEY,
