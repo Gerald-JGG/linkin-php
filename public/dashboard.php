@@ -8,20 +8,21 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 // Roles desde sesión
-$roles    = $_SESSION['roles'] ?? [];
-$roleIds  = array_column($roles, 'role_id');
+$roles = $_SESSION['roles'] ?? [];
+$roleIds = array_column($roles, 'role_id');
 
-$isAdmin     = in_array(1, $roleIds);
+$isAdmin = in_array(1, $roleIds);
 $isPassenger = in_array(2, $roleIds);
-$isDriver    = in_array(3, $roleIds);
+$isDriver = in_array(3, $roleIds);
 
 // Variables para la foto de perfil
 $firstName = $_SESSION['first_name'] ?? $_SESSION['username'] ?? 'Usuario';
 $photoPath = $_SESSION['photo'] ?? null;
-$initial   = strtoupper(substr($firstName, 0, 1));
+$initial = strtoupper(substr($firstName, 0, 1));
 ?>
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -32,10 +33,12 @@ $initial   = strtoupper(substr($firstName, 0, 1));
             display: flex;
             min-height: calc(100vh - 56px);
         }
+
         .content-area {
             flex: 1;
             padding: 24px;
         }
+
         .nav-icon {
             width: 18px;
             height: 18px;
@@ -44,11 +47,12 @@ $initial   = strtoupper(substr($firstName, 0, 1));
         }
     </style>
 </head>
+
 <body>
 
     <!-- NAVBAR SUPERIOR -->
     <nav class="navbar-custom"
-         style="padding: 12px 24px; display: flex; justify-content: space-between; align-items: center;">
+        style="padding: 12px 24px; display: flex; justify-content: space-between; align-items: center;">
         <div style="font-size: 20px; font-weight: bold; color: white;">
             Aventones
         </div>
@@ -97,9 +101,16 @@ $initial   = strtoupper(substr($firstName, 0, 1));
                 <?php if ($isAdmin): ?>
                     <hr style="margin:12px 0;">
                     <h6 class="text-muted" style="padding-left: 12px;">ADMIN</h6>
-                    <a class="nav-link" href="admin-vehicles.php">📝 Aprobar vehículos</a>
+
+                    <!-- Nuevo apartado de Rides (admin) -->
+                    <a class="nav-link" href="admin-rides.php">🛣️ Rides</a>
+
+                    <!-- Seguimos teniendo la aprobación de vehículos -->
+                    <a class="nav-link" href="admin-vehicles.php">🚗 Vehículos</a>
+
                     <a class="nav-link" href="admin-users.php">👥 Usuarios</a>
                 <?php endif; ?>
+
             </nav>
         </aside>
 
@@ -129,7 +140,8 @@ $initial   = strtoupper(substr($firstName, 0, 1));
             </section>
 
             <!-- Tarjetas estadísticas -->
-            <section style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:20px; margin-bottom:24px;">
+            <section
+                style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:20px; margin-bottom:24px;">
 
                 <div class="stat-card blue">
                     <h6 class="text-uppercase mb-1">Viajes activos</h6>
@@ -163,7 +175,8 @@ $initial   = strtoupper(substr($firstName, 0, 1));
                     <div class="card-custom" style="padding:20px;">
                         <h3>Como Pasajero</h3>
                         <p>Busca viajes, reserva espacios y revisa el estado de tus solicitudes.</p>
-                        <a href="rides-available.php" class="btn-primary-custom" style="text-decoration:none;">Buscar viajes</a>
+                        <a href="rides-available.php" class="btn-primary-custom" style="text-decoration:none;">Buscar
+                            viajes</a>
                     </div>
                 <?php endif; ?>
 
@@ -179,7 +192,8 @@ $initial   = strtoupper(substr($firstName, 0, 1));
                     <div class="card-custom" style="padding:20px;">
                         <h3>Panel Administrativo</h3>
                         <p>Aprueba vehículos, revisa usuarios y controla la plataforma.</p>
-                        <a href="admin-vehicles.php" class="btn-primary-custom" style="text-decoration:none;">Revisar vehículos</a>
+                        <a href="admin-vehicles.php" class="btn-primary-custom" style="text-decoration:none;">Revisar
+                            vehículos</a>
                     </div>
                 <?php endif; ?>
 
@@ -193,7 +207,7 @@ $initial   = strtoupper(substr($firstName, 0, 1));
     <script src="js/theme.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            const btn  = document.getElementById('userMenuButton');
+            const btn = document.getElementById('userMenuButton');
             const menu = document.getElementById('userMenu');
 
             if (!btn || !menu) return;
@@ -209,4 +223,5 @@ $initial   = strtoupper(substr($firstName, 0, 1));
         });
     </script>
 </body>
+
 </html>
