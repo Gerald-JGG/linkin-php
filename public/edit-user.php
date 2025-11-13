@@ -19,8 +19,8 @@ if (!$isAdmin) {
 require_once __DIR__ . '/../app/Config/database.php';
 require_once __DIR__ . '/../app/Models/user.php';
 
-$database = new Database();
-$db       = $database->getConnection();
+$database  = new Database();
+$db        = $database->getConnection();
 $userModel = new User($db);
 
 $userId = isset($_GET['id']) ? (int)$_GET['id'] : 0;
@@ -62,8 +62,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             mkdir($uploadDir, 0777, true);
         }
 
-        $extension = pathinfo($_FILES['photo']['name'], PATHINFO_EXTENSION);
-        $filename  = uniqid('user_') . '.' . $extension;
+        $extension  = pathinfo($_FILES['photo']['name'], PATHINFO_EXTENSION);
+        $filename   = uniqid('user_') . '.' . $extension;
         $uploadPath = $uploadDir . $filename;
 
         if (move_uploaded_file($_FILES['photo']['tmp_name'], $uploadPath)) {
@@ -86,7 +86,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if ($ok) {
             $message = "Usuario actualizado correctamente.";
-            $user = $userModel->findById($userId);
+            $user    = $userModel->findById($userId);
         } else {
             $error = "No se pudo actualizar el usuario.";
         }
@@ -107,7 +107,7 @@ $initialAdmin   = strtoupper(substr($firstNameAdmin, 0, 1));
     <link rel="stylesheet" href="css/styles.css">
     <style>
         .edit-container {
-            max-width: 800px;
+            max-width: 900px;
             margin: 24px auto;
             padding: 0 16px;
         }
@@ -128,6 +128,12 @@ $initialAdmin   = strtoupper(substr($firstNameAdmin, 0, 1));
             background-color: #1f2937;
             color: #e5e7eb;
         }
+
+        .form-wrapper {
+            max-width: 650px;
+            margin: 0 auto;
+        }
+
         .profile-avatar-small {
             width: 64px;
             height: 64px;
@@ -152,9 +158,11 @@ $initialAdmin   = strtoupper(substr($firstNameAdmin, 0, 1));
         .form-row {
             display:flex;
             gap:16px;
+            flex-wrap: wrap;
         }
         .form-row > div {
             flex:1;
+            min-width: 240px;
         }
         .form-group {
             margin-bottom:12px;
@@ -186,6 +194,12 @@ $initialAdmin   = strtoupper(substr($firstNameAdmin, 0, 1));
             background-color:#fee2e2;
             color:#b91c1c;
         }
+
+        @media (max-width: 640px) {
+            .edit-header {
+                flex-direction: column;
+            }
+        }
     </style>
 </head>
 <body>
@@ -213,6 +227,7 @@ $initialAdmin   = strtoupper(substr($firstNameAdmin, 0, 1));
             </button>
 
             <div class="user-menu" id="userMenu">
+                <a href="dashboard.php">Panel</a>
                 <a href="profile.php">Mi perfil</a>
                 <a href="settings.php">Configuración</a>
                 <hr>
@@ -252,60 +267,63 @@ $initialAdmin   = strtoupper(substr($firstNameAdmin, 0, 1));
                 <div class="alert alert-error"><?php echo htmlspecialchars($error); ?></div>
             <?php endif; ?>
 
-            <form method="post" enctype="multipart/form-data">
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label" for="first_name">Nombre</label>
-                        <input class="form-control" type="text" id="first_name" name="first_name"
-                               value="<?php echo htmlspecialchars($user['first_name']); ?>" required>
+            <div class="form-wrapper">
+                <form method="post" enctype="multipart/form-data">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label" for="first_name">Nombre</label>
+                            <input class="form-control" type="text" id="first_name" name="first_name"
+                                   value="<?php echo htmlspecialchars($user['first_name']); ?>" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="last_name">Apellidos</label>
+                            <input class="form-control" type="text" id="last_name" name="last_name"
+                                   value="<?php echo htmlspecialchars($user['last_name']); ?>" required>
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label class="form-label" for="last_name">Apellidos</label>
-                        <input class="form-control" type="text" id="last_name" name="last_name"
-                               value="<?php echo htmlspecialchars($user['last_name']); ?>" required>
-                    </div>
-                </div>
 
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label" for="cedula">Cédula</label>
-                        <input class="form-control" type="text" id="cedula" name="cedula"
-                               value="<?php echo htmlspecialchars($user['cedula']); ?>" required>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label" for="cedula">Cédula</label>
+                            <input class="form-control" type="text" id="cedula" name="cedula"
+                                   value="<?php echo htmlspecialchars($user['cedula']); ?>" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="birth_date">Fecha de nacimiento</label>
+                            <input class="form-control" type="date" id="birth_date" name="birth_date"
+                                   value="<?php echo htmlspecialchars($user['birth_date']); ?>" required>
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label class="form-label" for="birth_date">Fecha de nacimiento</label>
-                        <input class="form-control" type="date" id="birth_date" name="birth_date"
-                               value="<?php echo htmlspecialchars($user['birth_date']); ?>" required>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label" for="email">Correo</label>
+                            <input class="form-control" type="email" id="email" name="email"
+                                   value="<?php echo htmlspecialchars($user['email']); ?>" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="phone">Teléfono</label>
+                            <input class="form-control" type="text" id="phone" name="phone"
+                                   value="<?php echo htmlspecialchars($user['phone']); ?>" required>
+                        </div>
                     </div>
-                </div>
 
-                <div class="form-row">
                     <div class="form-group">
-                        <label class="form-label" for="email">Correo</label>
-                        <input class="form-control" type="email" id="email" name="email"
-                               value="<?php echo htmlspecialchars($user['email']); ?>" required>
+                        <label class="form-label">Usuario</label>
+                        <input class="form-control" type="text"
+                               value="<?php echo htmlspecialchars($user['username']); ?>" disabled>
                     </div>
+
                     <div class="form-group">
-                        <label class="form-label" for="phone">Teléfono</label>
-                        <input class="form-control" type="text" id="phone" name="phone"
-                               value="<?php echo htmlspecialchars($user['phone']); ?>" required>
+                        <label class="form-label" for="photo">Foto de perfil (opcional)</label>
+                        <input class="form-control" type="file" id="photo" name="photo" accept="image/*">
                     </div>
-                </div>
 
-                <div class="form-group">
-                    <label class="form-label">Usuario</label>
-                    <input class="form-control" type="text" value="<?php echo htmlspecialchars($user['username']); ?>" disabled>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label" for="photo">Foto de perfil (opcional)</label>
-                    <input class="form-control" type="file" id="photo" name="photo" accept="image/*">
-                </div>
-
-                <button type="submit" class="btn-primary-custom">
-                    Guardar cambios
-                </button>
-            </form>
+                    <button type="submit" class="btn-primary-custom">
+                        Guardar cambios
+                    </button>
+                </form>
+            </div>
         </div>
     </div>
 
