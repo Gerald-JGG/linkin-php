@@ -7,14 +7,17 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="css/styles.css">
 </head>
-<body class="bg-light">
+<body>
     <div class="container">
         <div class="row justify-content-center align-items-center min-vh-100">
             <div class="col-md-5">
                 <div class="card card-custom shadow-lg">
                     <div class="card-body p-5">
                         <div class="text-center mb-4">
-                            <h2 class="fw-bold"><img src="assets/img/car-icon.png" alt="Carro" style="width: 50px; height: auto" /> Aventones</h2>
+                            <h2 class="fw-bold">
+                                <img src="assets/img/car-icon.png" alt="Carro" style="width: 50px; height: auto" />
+                                Aventones
+                            </h2>
                             <p class="text-muted">Inicia sesión en tu cuenta</p>
                         </div>
 
@@ -33,8 +36,17 @@
                                 Iniciar Sesión
                             </button>
 
+                            <div class="text-center mb-2">
+                                <p class="mb-1">
+                                    ¿No tienes cuenta? <a href="register.php">Regístrate aquí</a>
+                                </p>
+                            </div>
+
+                            <!-- NUEVO: volver al inicio -->
                             <div class="text-center">
-                                <p class="mb-0">¿No tienes cuenta? <a href="register.php">Regístrate aquí</a></p>
+                                <a href="index.php" style="font-size: 14px; text-decoration: none; color: var(--primary-color);">
+                                    ← Volver al inicio
+                                </a>
                             </div>
                         </form>
                     </div>
@@ -42,9 +54,10 @@
             </div>
         </div>
     </div>
+
+    <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/theme.js"></script>
     <script src="js/login.js"></script>
 </body>
 </html>
-
-

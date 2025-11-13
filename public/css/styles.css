@@ -1,4 +1,7 @@
-/* Variables de color */
+/* ====================================================================== */
+/* variables globales                                                     */
+/* ====================================================================== */
+
 :root {
     --primary-color: #2563eb;
     --secondary-color: #1e40af;
@@ -9,17 +12,30 @@
     --dark-text: #1e293b;
 }
 
-/* Estilos generales */
+
+/* ====================================================================== */
+/* estilos base                                                           */
+/* ====================================================================== */
+
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background-color: var(--light-bg);
     color: var(--dark-text);
+
+    /* transición suave global */
+    transition: background-color 0.45s ease, color 0.45s ease;
 }
 
-/* Navbar personalizada */
+
+/* ====================================================================== */
+/* navbar                                                                 */
+/* ====================================================================== */
+
 .navbar-custom {
     background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+
+    transition: background-color 0.35s ease, box-shadow 0.35s ease;
 }
 
 .navbar-custom .navbar-brand,
@@ -31,12 +47,16 @@ body {
     color: #e0e7ff !important;
 }
 
-/* Cards personalizadas */
+
+/* ====================================================================== */
+/* cards                                                                  */
+/* ====================================================================== */
+
 .card-custom {
     border: none;
     border-radius: 12px;
     box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    transition: transform 0.2s, box-shadow 0.2s;
+    transition: transform 0.2s, box-shadow 0.2s, background-color 0.35s ease;
 }
 
 .card-custom:hover {
@@ -44,14 +64,18 @@ body {
     box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
 
-/* Botones personalizados */
+
+/* ====================================================================== */
+/* botones                                                                */
+/* ====================================================================== */
+
 .btn-primary-custom {
     background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
     border: none;
     padding: 10px 24px;
     border-radius: 8px;
     font-weight: 600;
-    transition: all 0.3s;
+    transition: all 0.3s ease;
     color: white;
 }
 
@@ -61,7 +85,11 @@ body {
     color: white;
 }
 
-/* Landing page hero */
+
+/* ====================================================================== */
+/* hero                                                                   */
+/* ====================================================================== */
+
 .hero-section {
     background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
     color: white;
@@ -69,7 +97,11 @@ body {
     min-height: 500px;
 }
 
-/* Formularios */
+
+/* ====================================================================== */
+/* formularios                                                            */
+/* ====================================================================== */
+
 .form-control:focus {
     border-color: var(--primary-color);
     box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.25);
@@ -81,37 +113,85 @@ body {
     margin-bottom: 8px;
 }
 
-/* Avatar de usuario */
+
+/* ====================================================================== */
+/* avatares                                                               */
+/* ====================================================================== */
+
+.user-avatar,
+.profile-avatar-small,
+.profile-avatar-large {
+    border-radius: 50%;
+    object-fit: cover;
+}
+
 .user-avatar {
     width: 40px;
     height: 40px;
-    border-radius: 50%;
-    object-fit: cover;
 }
 
 .user-avatar-large {
     width: 120px;
     height: 120px;
-    border-radius: 50%;
-    object-fit: cover;
     border: 4px solid white;
     box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
 
-/* Badges personalizados */
-.badge-pending {
-    background-color: var(--warning-color);
+.profile-avatar-small {
+    width: 64px;
+    height: 64px;
+    border: 2px solid white;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
 }
 
-.badge-approved {
-    background-color: var(--success-color);
+/* placeholders redondos */
+.user-avatar-placeholder,
+.user-avatar-placeholder-large,
+.profile-avatar-placeholder-small {
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    text-transform: uppercase;
+
+    transition: background-color 0.35s ease, color 0.35s ease;
 }
 
-.badge-rejected {
-    background-color: var(--danger-color);
+.user-avatar-placeholder {
+    width: 40px;
+    height: 40px;
+    font-size: 18px;
 }
 
-/* Tabla de viajes */
+.user-avatar-placeholder-large {
+    width: 120px;
+    height: 120px;
+    font-size: 32px;
+}
+
+.profile-avatar-placeholder-small {
+    width: 64px;
+    height: 64px;
+    font-size: 24px;
+}
+
+
+/* ====================================================================== */
+/* badges                                                                  */
+/* ====================================================================== */
+
+.badge-pending   { background-color: var(--warning-color); }
+.badge-approved  { background-color: var(--success-color); }
+.badge-rejected  { background-color: var(--danger-color); }
+
+
+/* ====================================================================== */
+/* cards para stats y rides                                                */
+/* ====================================================================== */
+
 .ride-card {
     border-left: 4px solid var(--primary-color);
 }
@@ -123,11 +203,11 @@ body {
     border-radius: 8px;
 }
 
-/* Stats cards */
 .stat-card {
     border-radius: 12px;
     padding: 20px;
     color: white;
+    transition: background-color 0.35s ease, box-shadow 0.35s ease;
 }
 
 .stat-card.blue {
@@ -146,11 +226,16 @@ body {
     background: linear-gradient(135deg, #8b5cf6, #7c3aed);
 }
 
-/* Sidebar */
+
+/* ====================================================================== */
+/* sidebar                                                                 */
+/* ====================================================================== */
+
 .sidebar {
     min-height: calc(100vh - 56px);
     background-color: white;
     border-right: 1px solid #e2e8f0;
+    transition: background-color 0.35s ease, color 0.35s ease, border-color 0.35s ease;
 }
 
 .sidebar .nav-link {
@@ -158,7 +243,7 @@ body {
     padding: 12px 20px;
     border-radius: 8px;
     margin: 4px 8px;
-    transition: all 0.2s;
+    transition: all 0.25s ease;
 }
 
 .sidebar .nav-link:hover {
@@ -171,7 +256,184 @@ body {
     color: white;
 }
 
-/* Loading spinner */
+
+/* ====================================================================== */
+/* user menu                                                               */
+/* ====================================================================== */
+
+.user-menu-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.user-avatar-button {
+    background: transparent;
+    border: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: white;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 999px;
+    transition: background-color 0.25s ease;
+}
+
+.user-avatar-button:hover {
+    background-color: rgba(255,255,255,0.12);
+}
+
+.user-name-label {
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.user-chevron {
+    font-size: 12px;
+    opacity: 0.8;
+}
+
+.user-menu {
+    position: absolute;
+    top: 52px;
+    right: 0;
+    background-color: white;
+    border-radius: 12px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.16);
+    min-width: 180px;
+    padding: 8px 0;
+    display: none;
+    z-index: 50;
+
+    transition: background-color 0.35s ease, color 0.35s ease;
+}
+
+.user-menu.show {
+    display: block;
+}
+
+.user-menu a {
+    display: block;
+    padding: 8px 16px;
+    text-decoration: none;
+    color: var(--dark-text);
+    font-size: 14px;
+}
+
+.user-menu a:hover {
+    background-color: #e5e7eb;
+}
+
+.user-menu hr {
+    border: none;
+    border-top: 1px solid #e5e7eb;
+    margin: 6px 0;
+}
+
+
+/* ====================================================================== */
+/* modo oscuro                                                            */
+/* ====================================================================== */
+
+body.dark-mode {
+    background-color: #020617;
+    color: #f1f5f9 !important;
+}
+
+/* navbar */
+body.dark-mode .navbar-custom {
+    background: linear-gradient(135deg, #0f172a, #020617);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.6);
+}
+
+/* sidebar */
+body.dark-mode .sidebar {
+    background-color: #020617;
+    border-right-color: #1f2937;
+}
+
+body.dark-mode .sidebar .nav-link {
+    color: #e5e7eb;
+}
+
+body.dark-mode .sidebar .nav-link:hover {
+    background-color: #1e293b;
+    color: #93c5fd;
+}
+
+body.dark-mode .sidebar .nav-link.active {
+    background-color: #1d4ed8;
+    color: white;
+}
+
+/* cards */
+body.dark-mode .card-custom {
+    background-color: #0f172a;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.6);
+}
+
+body.dark-mode .stat-card {
+    box-shadow: 0 2px 8px rgba(0,0,0,0.6);
+}
+
+/* formularios */
+body.dark-mode input,
+body.dark-mode select,
+body.dark-mode textarea {
+    background-color: #020617;
+    color: #e2e8f0 !important;
+    border: 1px solid #334155;
+}
+
+/* labels */
+body.dark-mode .form-label {
+    color: #cbd5e1 !important;
+}
+
+body.dark-mode input:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.5);
+}
+
+/* menú usuario */
+body.dark-mode .user-menu {
+    background-color: #0f172a;
+}
+
+body.dark-mode .user-menu a {
+    color: #e2e8f0 !important;
+}
+
+body.dark-mode .user-menu a:hover {
+    background-color: #1e293b;
+}
+
+body.dark-mode .user-menu hr {
+    border-top-color: #1f2937;
+}
+
+
+/* ====================================================================== */
+/* toggle animado claro/oscuro                                           */
+/* ====================================================================== */
+
+.theme-toggle button {
+    transition: 
+        background-color 0.3s ease,
+        color 0.3s ease,
+        transform 0.25s ease;
+}
+
+.theme-toggle button.active {
+    transform: scale(1.08);
+}
+
+
+/* ====================================================================== */
+/* spinner                                                                */
+/* ====================================================================== */
+
 .spinner-custom {
     border: 3px solid #f3f4f6;
     border-top: 3px solid var(--primary-color);
@@ -186,7 +448,11 @@ body {
     100% { transform: rotate(360deg); }
 }
 
-/* Responsive */
+
+/* ====================================================================== */
+/* responsive                                                             */
+/* ====================================================================== */
+
 @media (max-width: 768px) {
     .hero-section {
         padding: 60px 0;
