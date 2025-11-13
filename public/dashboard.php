@@ -106,7 +106,7 @@ $initial = strtoupper(substr($firstName, 0, 1));
                     <a class="nav-link" href="admin-rides.php">🛣️ Rides</a>
 
                     <!-- Seguimos teniendo la aprobación de vehículos -->
-                    <a class="nav-link" href="admin-vehicles.php">🚗 Vehículos</a>
+                    <a class="nav-link" href="vehicles.php">🚗 Mis vehículos</a>
 
                     <a class="nav-link" href="admin-users.php">👥 Usuarios</a>
                 <?php endif; ?>

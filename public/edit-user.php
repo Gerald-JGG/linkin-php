@@ -23,6 +23,7 @@ $database  = new Database();
 $db        = $database->getConnection();
 $userModel = new User($db);
 
+// ID del usuario a editar
 $userId = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 if ($userId <= 0) {
     die("Usuario inválido.");
@@ -33,68 +34,85 @@ if (!$user) {
     die("Usuario no encontrado.");
 }
 
-// Evitar editar admins (por seguridad)
+// Roles actuales del usuario objetivo
 $userRoles = $userModel->getUserRoles($userId);
-foreach ($userRoles as $r) {
-    if ((int)$r['role_id'] === 1) {
-        die("No se permite editar usuarios administradores desde aquí.");
-    }
+$roleIdsUser = array_column($userRoles, 'role_id');
+
+// Bloquear edición de admins
+if (in_array(1, $roleIdsUser)) {
+    die("No se permite editar usuarios administradores desde aquí.");
 }
 
+// Mensajes
 $message = '';
 $error   = '';
 
+/* ========================================================
+   PROCESAR FORMULARIO
+   ======================================================== */
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+
+    // Datos básicos
     $data = [
-        'first_name' => $_POST['first_name'] ?? '',
-        'last_name'  => $_POST['last_name'] ?? '',
-        'cedula'     => $_POST['cedula'] ?? '',
-        'birth_date' => $_POST['birth_date'] ?? '',
-        'email'      => $_POST['email'] ?? '',
-        'phone'      => $_POST['phone'] ?? '',
+        'first_name' => trim($_POST['first_name'] ?? ''),
+        'last_name'  => trim($_POST['last_name'] ?? ''),
+        'cedula'     => trim($_POST['cedula'] ?? ''),
+        'birth_date' => trim($_POST['birth_date'] ?? ''),
+        'email'      => trim($_POST['email'] ?? ''),
+        'phone'      => trim($_POST['phone'] ?? ''),
     ];
 
-    // Subir nueva foto (opcional)
+    // Subir foto (opcional)
     $newPhotoPath = null;
     if (isset($_FILES['photo']) && $_FILES['photo']['error'] === 0) {
         $uploadDir = __DIR__ . '/uploads/users/';
-        if (!file_exists($uploadDir)) {
-            mkdir($uploadDir, 0777, true);
-        }
+        if (!file_exists($uploadDir)) mkdir($uploadDir, 0777, true);
 
-        $extension  = pathinfo($_FILES['photo']['name'], PATHINFO_EXTENSION);
-        $filename   = uniqid('user_') . '.' . $extension;
-        $uploadPath = $uploadDir . $filename;
+        $ext = pathinfo($_FILES['photo']['name'], PATHINFO_EXTENSION);
+        $filename = uniqid("user_") . "." . $ext;
+        $path = $uploadDir . $filename;
 
-        if (move_uploaded_file($_FILES['photo']['tmp_name'], $uploadPath)) {
-            $newPhotoPath = 'uploads/users/' . $filename;
+        if (move_uploaded_file($_FILES['photo']['tmp_name'], $path)) {
+            $newPhotoPath = "uploads/users/" . $filename;
         } else {
             $error = "Error al subir la foto.";
         }
     }
 
+    // Rol nuevo
+    $newRole = (int)($_POST['role_id'] ?? 2);
+
+    // No permitir role_id inválido
+    if (!in_array($newRole, [1,2,3])) {
+        $error = "Rol inválido.";
+    }
+
     if (!$error) {
+
+        // Actualizar datos del usuario
         $ok = $userModel->update($userId, $data);
 
+        // Actualizar foto
         if ($ok && $newPhotoPath) {
-            $stmt = $db->prepare("UPDATE users SET photo = :photo WHERE id = :id");
-            $stmt->bindParam(':photo', $newPhotoPath);
+            $stmt = $db->prepare("UPDATE users SET photo = :p WHERE id = :id");
+            $stmt->bindParam(':p', $newPhotoPath);
             $stmt->bindParam(':id', $userId);
             $stmt->execute();
-            $user['photo'] = $newPhotoPath;
         }
 
+        // Actualizar rol
         if ($ok) {
+            $userModel->updateRole($userId, $newRole);
             $message = "Usuario actualizado correctamente.";
-            $user    = $userModel->findById($userId);
+            $user = $userModel->findById($userId);
         } else {
             $error = "No se pudo actualizar el usuario.";
         }
     }
 }
 
-// Para navbar admin
-$firstNameAdmin = $_SESSION['first_name'] ?? $_SESSION['username'] ?? 'Admin';
+// Para navbar
+$firstNameAdmin = $_SESSION['first_name'] ?? 'Admin';
 $photoAdmin     = $_SESSION['photo'] ?? null;
 $initialAdmin   = strtoupper(substr($firstNameAdmin, 0, 1));
 ?>
@@ -103,30 +121,14 @@ $initialAdmin   = strtoupper(substr($firstNameAdmin, 0, 1));
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Editar usuario - Aventones</title>
+    <title>Editar usuario</title>
     <link rel="stylesheet" href="css/styles.css">
+
     <style>
         .edit-container {
             max-width: 900px;
             margin: 24px auto;
-            padding: 0 16px;
-        }
-        .edit-header {
-            margin-bottom: 16px;
-        }
-        .btn-back {
-            display: inline-block;
-            padding: 6px 12px;
-            border-radius: 6px;
-            text-decoration: none;
-            font-size: 14px;
-            background-color: #e5e7eb;
-            color: var(--dark-text);
-            margin-bottom: 16px;
-        }
-        body.dark-mode .btn-back {
-            background-color: #1f2937;
-            color: #e5e7eb;
+            padding: 0 18px;
         }
 
         .form-wrapper {
@@ -134,200 +136,167 @@ $initialAdmin   = strtoupper(substr($firstNameAdmin, 0, 1));
             margin: 0 auto;
         }
 
-        .profile-avatar-small {
-            width: 64px;
-            height: 64px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 2px solid white;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-        }
-        .profile-avatar-placeholder-small {
-            width: 64px;
-            height: 64px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 700;
-            font-size: 24px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-        }
         .form-row {
-            display:flex;
-            gap:16px;
-            flex-wrap: wrap;
+            display:flex; 
+            gap:16px; 
+            flex-wrap:wrap;
         }
-        .form-row > div {
-            flex:1;
-            min-width: 240px;
-        }
-        .form-group {
-            margin-bottom:12px;
-        }
-        .form-control {
-            width: 100%;
-            padding: 8px 10px;
-            border-radius: 6px;
-            border: 1px solid #cbd5e1;
-            font-size: 14px;
-        }
-        .form-label {
-            display:block;
-            font-size:14px;
-            font-weight:600;
-            margin-bottom:4px;
-        }
-        .alert {
-            padding:10px 14px;
-            border-radius:6px;
-            font-size:14px;
-            margin-bottom:12px;
-        }
-        .alert-success {
-            background-color:#dcfce7;
-            color:#166534;
-        }
-        .alert-error {
-            background-color:#fee2e2;
-            color:#b91c1c;
-        }
+        .form-row > div { flex:1; min-width:240px; }
 
-        @media (max-width: 640px) {
-            .edit-header {
-                flex-direction: column;
-            }
+        .form-group { margin-bottom:12px; }
+
+        .btn-back {
+            display:inline-block;
+            padding:6px 12px;
+            border-radius:6px;
+            background:#e5e7eb;
+            text-decoration:none;
+            color:#1e293b;
+            margin-bottom:16px;
+        }
+        body.dark-mode .btn-back {
+            background:#1f2937;
+            color:#e2e8f0;
         }
     </style>
 </head>
+
 <body>
 
-    <!-- NAVBAR ADMIN -->
-    <nav class="navbar-custom"
-         style="padding: 12px 24px; display: flex; justify-content: space-between; align-items: center;">
-        <div style="font-size: 20px; font-weight: bold; color: white;">
-            Aventones - Admin
-        </div>
+<!-- NAVBAR -->
+<nav class="navbar-custom"
+     style="padding: 12px 24px; display:flex; justify-content:space-between; align-items:center;">
+    <div style="font-size:20px; font-weight:bold; color:white;">Aventones - Admin</div>
 
-        <div class="user-menu-container">
-            <button type="button" class="user-avatar-button" id="userMenuButton">
-                <?php if ($photoAdmin): ?>
-                    <img src="<?php echo htmlspecialchars($photoAdmin); ?>" 
-                         alt="Foto de perfil" 
-                         class="user-avatar">
-                <?php else: ?>
-                    <div class="user-avatar-placeholder">
-                        <?php echo htmlspecialchars($initialAdmin); ?>
-                    </div>
-                <?php endif; ?>
-                <span class="user-name-label"><?php echo htmlspecialchars($firstNameAdmin); ?></span>
-                <span class="user-chevron">▾</span>
-            </button>
-
-            <div class="user-menu" id="userMenu">
-                <a href="dashboard.php">Panel</a>
-                <a href="profile.php">Mi perfil</a>
-                <a href="settings.php">Configuración</a>
-                <hr>
-                <a href="api/logout.php">Salir</a>
-            </div>
-        </div>
-    </nav>
-
-    <div class="edit-container">
-        <a href="admin-users.php" class="btn-back">← Volver a la lista de usuarios</a>
-
-        <div class="card-custom" style="padding:20px;">
-            <div class="edit-header" style="display:flex; align-items:center; gap:16px; margin-bottom:16px;">
-                <?php 
-                    $uInitial = strtoupper(substr($user['first_name'] ?? 'U', 0, 1));
-                    if (!empty($user['photo'])): ?>
-                    <img src="<?php echo htmlspecialchars($user['photo']); ?>" 
-                         alt="Foto de usuario" 
-                         class="profile-avatar-small">
-                <?php else: ?>
-                    <div class="profile-avatar-placeholder-small">
-                        <?php echo htmlspecialchars($uInitial); ?>
-                    </div>
-                <?php endif; ?>
-                <div>
-                    <h2 style="margin-bottom:4px;">Editar usuario</h2>
-                    <p style="color:gray; font-size:14px;">
-                        <?php echo htmlspecialchars($user['first_name'] . ' ' . $user['last_name']); ?> (@<?php echo htmlspecialchars($user['username']); ?>)
-                    </p>
-                </div>
-            </div>
-
-            <?php if ($message): ?>
-                <div class="alert alert-success"><?php echo htmlspecialchars($message); ?></div>
+    <div class="user-menu-container">
+        <button type="button" class="user-avatar-button" id="userMenuButton">
+            <?php if ($photoAdmin): ?>
+                <img src="<?php echo htmlspecialchars($photoAdmin); ?>" class="user-avatar">
+            <?php else: ?>
+                <div class="user-avatar-placeholder"><?php echo $initialAdmin; ?></div>
             <?php endif; ?>
-            <?php if ($error): ?>
-                <div class="alert alert-error"><?php echo htmlspecialchars($error); ?></div>
-            <?php endif; ?>
+            <span class="user-name-label"><?php echo htmlspecialchars($firstNameAdmin); ?></span>
+            <span class="user-chevron">▾</span>
+        </button>
 
-            <div class="form-wrapper">
-                <form method="post" enctype="multipart/form-data">
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label class="form-label" for="first_name">Nombre</label>
-                            <input class="form-control" type="text" id="first_name" name="first_name"
-                                   value="<?php echo htmlspecialchars($user['first_name']); ?>" required>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label" for="last_name">Apellidos</label>
-                            <input class="form-control" type="text" id="last_name" name="last_name"
-                                   value="<?php echo htmlspecialchars($user['last_name']); ?>" required>
-                        </div>
-                    </div>
-
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label class="form-label" for="cedula">Cédula</label>
-                            <input class="form-control" type="text" id="cedula" name="cedula"
-                                   value="<?php echo htmlspecialchars($user['cedula']); ?>" required>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label" for="birth_date">Fecha de nacimiento</label>
-                            <input class="form-control" type="date" id="birth_date" name="birth_date"
-                                   value="<?php echo htmlspecialchars($user['birth_date']); ?>" required>
-                        </div>
-                    </div>
-
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label class="form-label" for="email">Correo</label>
-                            <input class="form-control" type="email" id="email" name="email"
-                                   value="<?php echo htmlspecialchars($user['email']); ?>" required>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label" for="phone">Teléfono</label>
-                            <input class="form-control" type="text" id="phone" name="phone"
-                                   value="<?php echo htmlspecialchars($user['phone']); ?>" required>
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Usuario</label>
-                        <input class="form-control" type="text"
-                               value="<?php echo htmlspecialchars($user['username']); ?>" disabled>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label" for="photo">Foto de perfil (opcional)</label>
-                        <input class="form-control" type="file" id="photo" name="photo" accept="image/*">
-                    </div>
-
-                    <button type="submit" class="btn-primary-custom">
-                        Guardar cambios
-                    </button>
-                </form>
-            </div>
+        <div class="user-menu" id="userMenu">
+            <a href="dashboard.php">Panel</a>
+            <a href="profile.php">Mi perfil</a>
+            <a href="settings.php">Configuración</a>
+            <hr>
+            <a href="api/logout.php">Salir</a>
         </div>
     </div>
+</nav>
 
-    <script src="js/theme.js"></script>
-    <script src="js/user-menu.js"></script>
+<div class="edit-container">
+    <a href="admin-users.php" class="btn-back">← Volver</a>
+
+    <div class="card-custom" style="padding:20px;">
+
+        <?php if ($message): ?>
+            <div class="alert alert-success"><?php echo $message; ?></div>
+        <?php endif; ?>
+
+        <?php if ($error): ?>
+            <div class="alert alert-error"><?php echo $error; ?></div>
+        <?php endif; ?>
+
+        <div class="edit-header" style="display:flex; gap:16px; align-items:center; margin-bottom:16px;">
+            <?php
+            $uInitial = strtoupper(substr($user['first_name'], 0, 1));
+            if (!empty($user['photo'])): ?>
+                <img src="<?php echo htmlspecialchars($user['photo']); ?>" 
+                     class="profile-avatar-small">
+            <?php else: ?>
+                <div class="profile-avatar-placeholder-small"><?php echo $uInitial; ?></div>
+            <?php endif; ?>
+
+            <div>
+                <h2>Editar usuario</h2>
+                <p style="color:gray; font-size:14px;">
+                    <?php echo htmlspecialchars($user['first_name'] . " " . $user['last_name']); ?>
+                    (@<?php echo htmlspecialchars($user['username']); ?>)
+                </p>
+            </div>
+        </div>
+
+        <div class="form-wrapper">
+            <form method="post" enctype="multipart/form-data">
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Nombre</label>
+                        <input name="first_name" class="form-control" 
+                               value="<?php echo htmlspecialchars($user['first_name']); ?>" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Apellidos</label>
+                        <input name="last_name" class="form-control"
+                               value="<?php echo htmlspecialchars($user['last_name']); ?>" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Cédula</label>
+                        <input name="cedula" class="form-control"
+                               value="<?php echo htmlspecialchars($user['cedula']); ?>" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Fecha nacimiento</label>
+                        <input type="date" name="birth_date" class="form-control"
+                               value="<?php echo htmlspecialchars($user['birth_date']); ?>" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Correo</label>
+                        <input type="email" name="email" class="form-control"
+                               value="<?php echo htmlspecialchars($user['email']); ?>" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Teléfono</label>
+                        <input name="phone" class="form-control"
+                               value="<?php echo htmlspecialchars($user['phone']); ?>" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Usuario</label>
+                    <input class="form-control" value="<?php echo htmlspecialchars($user['username']); ?>" disabled>
+                </div>
+
+                <!-- SELECT DE ROLES -->
+                <div class="form-group">
+                    <label class="form-label">Rol del usuario</label>
+                    <select name="role_id" class="form-control" required>
+                        <option value="2" <?php echo in_array(2, $roleIdsUser) ? 'selected':''; ?>>Pasajero</option>
+                        <option value="3" <?php echo in_array(3, $roleIdsUser) ? 'selected':''; ?>>Chofer</option>
+                        <option value="1" <?php echo in_array(1, $roleIdsUser) ? 'selected':''; ?>>Administrador</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Foto (opcional)</label>
+                    <input type="file" name="photo" class="form-control" accept="image/*">
+                </div>
+
+                <button class="btn-primary-custom" style="margin-top:10px;">
+                    Guardar cambios
+                </button>
+
+            </form>
+        </div>
+
+    </div>
+</div>
+
+<script src="js/theme.js"></script>
+<script src="js/user-menu.js"></script>
 </body>
 </html>
