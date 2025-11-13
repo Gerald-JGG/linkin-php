@@ -54,18 +54,24 @@ class AuthController {
     }
     
     public function logout() {
-        session_start();
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
         session_destroy();
         return ['success' => true, 'message' => 'Sesión cerrada'];
     }
     
     public function checkAuth() {
-        session_start();
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
         return isset($_SESSION['user_id']);
     }
     
     public function hasRole($roleId) {
-        session_start();
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
         if (!isset($_SESSION['roles'])) {
             return false;
         }

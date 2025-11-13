@@ -16,7 +16,10 @@ class VehicleController {
     }
     
     public function create($data) {
-        session_start();
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+        
         if (!isset($_SESSION['user_id'])) {
             return ['success' => false, 'message' => 'No autorizado'];
         }
@@ -32,7 +35,10 @@ class VehicleController {
     }
     
     public function getMyVehicles() {
-        session_start();
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+        
         if (!isset($_SESSION['user_id'])) {
             return ['success' => false, 'message' => 'No autorizado'];
         }
@@ -42,7 +48,10 @@ class VehicleController {
     }
     
     public function getPending() {
-        session_start();
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+        
         // Verificar si es administrador (rol_id = 1)
         if (!in_array(1, array_column($_SESSION['roles'] ?? [], 'role_id'))) {
             return ['success' => false, 'message' => 'No autorizado'];
@@ -53,7 +62,10 @@ class VehicleController {
     }
     
     public function approve($vehicleId) {
-        session_start();
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+        
         // Verificar si es administrador
         if (!in_array(1, array_column($_SESSION['roles'] ?? [], 'role_id'))) {
             return ['success' => false, 'message' => 'No autorizado'];
@@ -85,7 +97,10 @@ class VehicleController {
     }
     
     public function reject($vehicleId, $reason) {
-        session_start();
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+        
         if (!in_array(1, array_column($_SESSION['roles'] ?? [], 'role_id'))) {
             return ['success' => false, 'message' => 'No autorizado'];
         }
@@ -100,7 +115,10 @@ class VehicleController {
     }
     
     public function update($id, $data) {
-        session_start();
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+        
         $vehicle = $this->vehicleModel->findById($id);
         
         if ($vehicle['user_id'] != $_SESSION['user_id']) {
@@ -115,7 +133,10 @@ class VehicleController {
     }
     
     public function delete($id) {
-        session_start();
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+        
         $vehicle = $this->vehicleModel->findById($id);
         
         if ($vehicle['user_id'] != $_SESSION['user_id']) {

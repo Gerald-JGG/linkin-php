@@ -13,7 +13,9 @@ class RideController {
     }
     
     public function create($data) {
-        session_start();
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
         if (!isset($_SESSION['user_id'])) {
             return ['success' => false, 'message' => 'No autorizado'];
         }
@@ -34,7 +36,9 @@ class RideController {
     }
     
     public function getMyRides() {
-        session_start();
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
         if (!isset($_SESSION['user_id'])) {
             return ['success' => false, 'message' => 'No autorizado'];
         }
