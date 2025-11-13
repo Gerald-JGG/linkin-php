@@ -15,7 +15,7 @@
     <nav class="navbar navbar-expand-lg navbar-custom">
       <div class="container">
         <a class="navbar-brand fw-bold" href="index.php">
-          <img src="assets/img/car-icon.png" alt="Logo" style="width: 32px; height: 32px; margin-right: 8px" />
+          <img src="uploads/img/car-icon.png" alt="Logo" style="width: 32px; height: 32px; margin-right: 8px" />
           Aventones
         </a>
 
@@ -56,7 +56,7 @@
         <div class="col-lg-6 text-center">
           <div class="mt-5 mt-lg-0">
             <h2 class="display-1">
-              <img src="assets/img/car-icon.png" alt="Carro" style="width: 100px; height: auto" />
+              <img src="uploads/img/car-icon.png" alt="Carro" style="width: 100px; height: auto" />
             </h2>
             <p class="fs-5">Miles de viajes disponibles</p>
           </div>
