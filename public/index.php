@@ -14,7 +14,7 @@
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-custom">
       <div class="container">
-        <a class="navbar-brand fw-bold" href="index.html">
+        <a class="navbar-brand fw-bold" href="index.php">
           <img src="assets/img/car-icon.png" alt="Logo" style="width: 32px; height: 32px; margin-right: 8px" />
           Aventones
         </a>
@@ -28,7 +28,7 @@
               <a class="nav-link" href="login.php">Iniciar Sesión</a>
             </li>
             <li class="nav-item">
-              <a class="btn btn-light ms-2" href="register.html">Registrarse</a>
+              <a class="btn btn-light ms-2" href="register.php">Registrarse</a>
             </li>
           </ul>
         </div>
@@ -49,8 +49,8 @@
             de gasolina y contribuye al medio ambiente.
           </p>
           <div class="d-flex gap-3">
-            <a href="register.html" class="btn btn-light btn-lg">Registrarme como Pasajero</a>
-            <a href="register.html" class="btn btn-outline-light btn-lg">Ofrecer Viajes</a>
+            <a href="register.php" class="btn btn-light btn-lg">Registrarme como Pasajero</a>
+            <a href="register.php" class="btn btn-outline-light btn-lg">Ofrecer Viajes</a>
           </div>
         </div>
         <div class="col-lg-6 text-center">
@@ -105,7 +105,7 @@
     <div class="container text-center">
       <h2 class="mb-4">¿Listo para comenzar?</h2>
       <p class="lead mb-4">Únete a la comunidad de Aventones hoy mismo</p>
-      <a href="register.html" class="btn btn-primary-custom btn-lg">Crear Cuenta Gratis</a>
+      <a href="register.php" class="btn btn-primary-custom btn-lg">Crear Cuenta Gratis</a>
     </div>
   </section>
 

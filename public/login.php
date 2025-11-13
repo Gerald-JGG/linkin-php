@@ -21,19 +21,12 @@
                         <form id="loginForm">
                             <div class="mb-3">
                                 <label for="username" class="form-label">Usuario</label>
-                                <input type="text" class="form-control" id="username" required>
+                                <input type="text" class="form-control" id="username" name="username" required>
                             </div>
 
                             <div class="mb-3">
                                 <label for="password" class="form-label">Contraseña</label>
-                                <input type="password" class="form-control" id="password" required>
-                            </div>
-
-                            <div class="mb-3 form-check">
-                                <input type="checkbox" class="form-check-input" id="remember">
-                                <label class="form-check-label" for="remember">
-                                    Recordarme
-                                </label>
+                                <input type="password" class="form-control" id="password" name="password" required>
                             </div>
 
                             <button type="submit" class="btn btn-primary-custom w-100 mb-3">
@@ -41,15 +34,17 @@
                             </button>
 
                             <div class="text-center">
-                                <p class="mb-0">¿No tienes cuenta? <a href="register.html">Regístrate aquí</a></p>
+                                <p class="mb-0">¿No tienes cuenta? <a href="register.php">Regístrate aquí</a></p>
                             </div>
                         </form>
-                        <hr class="my-4">
                     </div>
                 </div>
             </div>
         </div>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/login.js"></script>
 </body>
 </html>
+
+

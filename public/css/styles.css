@@ -52,11 +52,13 @@ body {
     border-radius: 8px;
     font-weight: 600;
     transition: all 0.3s;
+    color: white;
 }
 
 .btn-primary-custom:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
+    color: white;
 }
 
 /* Landing page hero */
