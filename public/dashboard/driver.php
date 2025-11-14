@@ -89,7 +89,7 @@ if (isset($_SESSION['roles'])) {
                 <div id="section-rides" class="content-section d-none">
                     <div class="d-flex justify-content-between align-items-center mb-4">
                         <h2>Mis Viajes</h2>
-                        <button class="btn btn-primary-custom" data-bs-toggle="modal" data-bs-target="#rideModal">
+                        <button class="btn btn-primary-custom" data-bs-toggle="modal" data-bs-target="#rideModal" onclick="openCreateRideModal()">
                             + Crear Viaje
                         </button>
                     </div>
@@ -122,28 +122,73 @@ if (isset($_SESSION['roles'])) {
                     <form id="vehicleForm" method="post" enctype="multipart/form-data">
                         <div class="mb-3">
                             <label class="form-label">Marca *</label>
-                            <input type="text" class="form-control" name="brand" required>
+                            <select class="form-select" name="brand" id="brand_select" required>
+                                <option value="">Seleccione una marca</option>
+                                <option value="Toyota">Toyota</option>
+                                <option value="Honda">Honda</option>
+                                <option value="Nissan">Nissan</option>
+                                <option value="Mazda">Mazda</option>
+                                <option value="Hyundai">Hyundai</option>
+                                <option value="Kia">Kia</option>
+                                <option value="Chevrolet">Chevrolet</option>
+                                <option value="Ford">Ford</option>
+                                <option value="Volkswagen">Volkswagen</option>
+                                <option value="Mitsubishi">Mitsubishi</option>
+                                <option value="Suzuki">Suzuki</option>
+                                <option value="Subaru">Subaru</option>
+                                <option value="Mercedes-Benz">Mercedes-Benz</option>
+                                <option value="BMW">BMW</option>
+                                <option value="Audi">Audi</option>
+                                <option value="Otra">Otra</option>
+                            </select>
                         </div>
+
                         <div class="mb-3">
                             <label class="form-label">Modelo *</label>
-                            <input type="text" class="form-control" name="model" required>
+                            <select class="form-select" name="model" id="model_select" required disabled>
+                                <option value="">Seleccione primero una marca</option>
+                            </select>
                         </div>
+
                         <div class="mb-3">
                             <label class="form-label">Año *</label>
-                            <input type="number" class="form-control" name="year" min="1900" max="2025" required>
+                            <select class="form-select" name="year" required>
+                                <option value="">Seleccione un año</option>
+                                <?php for($year = 2025; $year >= 1990; $year--): ?>
+                                    <option value="<?php echo $year; ?>"><?php echo $year; ?></option>
+                                <?php endfor; ?>
+                            </select>
                         </div>
+
                         <div class="mb-3">
                             <label class="form-label">Color *</label>
-                            <input type="text" class="form-control" name="color" required>
+                            <select class="form-select" name="color" required>
+                                <option value="">Seleccione un color</option>
+                                <option value="Blanco">Blanco</option>
+                                <option value="Negro">Negro</option>
+                                <option value="Gris">Gris</option>
+                                <option value="Plata">Plata</option>
+                                <option value="Azul">Azul</option>
+                                <option value="Rojo">Rojo</option>
+                                <option value="Verde">Verde</option>
+                                <option value="Amarillo">Amarillo</option>
+                                <option value="Naranja">Naranja</option>
+                                <option value="Café">Café</option>
+                                <option value="Dorado">Dorado</option>
+                                <option value="Otro">Otro</option>
+                            </select>
                         </div>
+
                         <div class="mb-3">
                             <label class="form-label">Placa *</label>
-                            <input type="text" class="form-control" name="plate" required>
+                            <input type="text" class="form-control" name="plate" placeholder="Ej: ABC-123" required>
                         </div>
+
                         <div class="mb-3">
                             <label class="form-label">Fotografía (opcional)</label>
                             <input type="file" class="form-control" name="photo" accept="image/*">
                         </div>
+
                         <button type="submit" class="btn btn-primary-custom w-100">Registrar</button>
                     </form>
                 </div>
@@ -151,46 +196,49 @@ if (isset($_SESSION['roles'])) {
         </div>
     </div>
 
-    <!-- Modal Viaje -->
+    <!-- Modal Viaje (Crear/Editar) -->
     <div class="modal fade" id="rideModal" tabindex="-1">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Crear Viaje</h5>
+                    <h5 class="modal-title" id="rideModalTitle">Crear Viaje</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     <form id="rideForm">
+                        <input type="hidden" id="ride_id" name="ride_id">
+                        <input type="hidden" id="ride_action" name="action" value="create">
+                        
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Vehículo *</label>
-                                <select class="form-select" name="vehicle_id" id="vehicle_select" required>
+                                <select class="form-select" name="vehicle_id" id="ride_vehicle_select" required>
                                     <option value="">Seleccione un vehículo</option>
                                 </select>
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Nombre del Viaje *</label>
-                                <input type="text" class="form-control" name="ride_name" required>
+                                <input type="text" class="form-control" name="ride_name" id="ride_name" placeholder="Ej: Ruta San José - Heredia" required>
                             </div>
                         </div>
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Lugar de Salida *</label>
-                                <input type="text" class="form-control" name="departure_location" required>
+                                <input type="text" class="form-control" name="departure_location" id="departure_location" placeholder="Ej: San José Centro" required>
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Hora de Salida *</label>
-                                <input type="time" class="form-control" name="departure_time" required>
+                                <input type="time" class="form-control" name="departure_time" id="departure_time" required>
                             </div>
                         </div>
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Lugar de Llegada *</label>
-                                <input type="text" class="form-control" name="arrival_location" required>
+                                <input type="text" class="form-control" name="arrival_location" id="arrival_location" placeholder="Ej: Heredia Centro" required>
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Hora de Llegada *</label>
-                                <input type="time" class="form-control" name="arrival_time" required>
+                                <input type="time" class="form-control" name="arrival_time" id="arrival_time" required>
                             </div>
                         </div>
                         <div class="mb-3">
@@ -228,15 +276,15 @@ if (isset($_SESSION['roles'])) {
                         </div>
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">Tarifa por Asiento *</label>
-                                <input type="number" class="form-control" name="price_per_seat" min="0" step="0.01" required>
+                                <label class="form-label">Tarifa por Asiento (₡) *</label>
+                                <input type="number" class="form-control" name="price_per_seat" id="price_per_seat" min="0" step="0.01" placeholder="1500.00" required>
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Asientos Disponibles *</label>
-                                <input type="number" class="form-control" name="total_seats" min="1" max="10" required>
+                                <input type="number" class="form-control" name="total_seats" id="total_seats" min="1" max="10" placeholder="4" required>
                             </div>
                         </div>
-                        <button type="submit" class="btn btn-primary-custom w-100">Crear Viaje</button>
+                        <button type="submit" class="btn btn-primary-custom w-100" id="rideSubmitBtn">Crear Viaje</button>
                     </form>
                 </div>
             </div>
@@ -245,5 +293,7 @@ if (isset($_SESSION['roles'])) {
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="../js/driver.js"></script>
+    <script src="../js/vehicle-models.js"></script>
+    <script src="../js/ride-crud.js"></script>
 </body>
 </html>
