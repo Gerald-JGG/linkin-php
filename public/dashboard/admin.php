@@ -20,6 +20,16 @@ if (!$isAdmin) {
     header('Location: passenger.php');
     exit;
 }
+
+// Obtener foto del usuario
+require_once __DIR__ . '/../../app/Config/database.php';
+require_once __DIR__ . '/../../app/Models/User.php';
+
+$database = new Database();
+$db = $database->getConnection();
+$userModel = new User($db);
+$currentUser = $userModel->findById($_SESSION['user_id']);
+$userPhoto = $currentUser['photo'] ?? null;
 ?>
 
 <!DOCTYPE html>
@@ -39,6 +49,17 @@ if (!$isAdmin) {
                 🚗 Aventones - Admin
             </a>
             <div class="d-flex align-items-center">
+                <?php if ($userPhoto && file_exists(__DIR__ . '/../' . $userPhoto)): ?>
+                    <img src="../<?php echo htmlspecialchars($userPhoto); ?>" 
+                         alt="Foto de perfil" 
+                         class="user-avatar me-2"
+                         style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 2px solid white;">
+                <?php else: ?>
+                    <div class="user-avatar me-2 bg-white text-primary d-flex align-items-center justify-content-center" 
+                         style="width: 40px; height: 40px; border-radius: 50%; font-weight: bold; border: 2px solid white;">
+                        <?php echo strtoupper(substr($_SESSION['first_name'], 0, 1)); ?>
+                    </div>
+                <?php endif; ?>
                 <span class="text-white me-3">Admin: <?php echo htmlspecialchars($_SESSION['first_name']); ?></span>
                 <a href="../api/logout.php" class="btn btn-outline-light btn-sm">Cerrar Sesión</a>
             </div>
