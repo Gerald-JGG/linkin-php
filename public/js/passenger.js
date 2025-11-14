@@ -1,3 +1,29 @@
+// Función para mostrar mensajes estéticos
+function showAlert(message, type = 'danger') {
+    // Tipos: success, danger, warning, info
+    const alertHTML = `
+        <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    `;
+    
+    // Buscar o crear contenedor de alertas
+    let alertContainer = document.getElementById('alert-container');
+    if (!alertContainer) {
+        alertContainer = document.createElement('div');
+        alertContainer.id = 'alert-container';
+        // Insertar antes del formulario
+        const form = document.getElementById('registerForm');
+        form.parentNode.insertBefore(alertContainer, form);
+    }
+    
+    alertContainer.innerHTML = alertHTML;
+    
+    // Scroll suave hacia la alerta
+    alertContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
 // Navegación entre secciones
 document.querySelectorAll('.sidebar .nav-link').forEach(link => {
     link.addEventListener('click', function(e) {

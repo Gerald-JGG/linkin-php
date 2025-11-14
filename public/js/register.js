@@ -1,3 +1,29 @@
+// Función para mostrar mensajes estéticos
+function showAlert(message, type = 'danger') {
+    // Tipos: success, danger, warning, info
+    const alertHTML = `
+        <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    `;
+    
+    // Buscar o crear contenedor de alertas
+    let alertContainer = document.getElementById('alert-container');
+    if (!alertContainer) {
+        alertContainer = document.createElement('div');
+        alertContainer.id = 'alert-container';
+        // Insertar antes del formulario
+        const form = document.getElementById('registerForm');
+        form.parentNode.insertBefore(alertContainer, form);
+    }
+    
+    alertContainer.innerHTML = alertHTML;
+    
+    // Scroll suave hacia la alerta
+    alertContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
 document.getElementById('registerForm').addEventListener('submit', async function(e) {
     e.preventDefault();
     
@@ -8,7 +34,7 @@ document.getElementById('registerForm').addEventListener('submit', async functio
     const passwordConfirm = formData.get('password_confirm');
     
     if (password !== passwordConfirm) {
-        alert('Las contraseñas no coinciden');
+        showAlert('Las contraseñas no coinciden. Por favor, verifica e intenta nuevamente.', 'danger');
         return;
     }
     
@@ -21,13 +47,16 @@ document.getElementById('registerForm').addEventListener('submit', async functio
         const result = await response.json();
         
         if (result.success) {
-            alert(result.message);
-            window.location.href = 'login.php';
+            showAlert(result.message, 'success');
+            // Esperar 2 segundos antes de redirigir
+            setTimeout(() => {
+                window.location.href = 'login.php';
+            }, 2000);
         } else {
-            alert('Error: ' + result.message);
+            showAlert('Error: ' + result.message, 'danger');
         }
     } catch (error) {
         console.error('Error:', error);
-        alert('Error al procesar el registro');
+        showAlert('Error al procesar el registro. Por favor, intenta nuevamente.', 'danger');
     }
 });
