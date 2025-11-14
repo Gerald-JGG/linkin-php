@@ -1,130 +1,96 @@
 <?php
 session_start();
 
-// ---------------- VALIDAR LOGIN ----------------
 if (!isset($_SESSION['user_id'])) {
     header("Location: login.php");
     exit;
 }
 
-$userId   = $_SESSION['user_id'];
-$roles    = $_SESSION['roles'] ?? [];
-$roleIds  = array_column($roles, 'role_id');
+$roles = $_SESSION['roles'] ?? [];
+$roleIds = array_column($roles, 'role_id');
 
 $isAdmin  = in_array(1, $roleIds);
 $isDriver = in_array(3, $roleIds);
 
 if (!$isAdmin && !$isDriver) {
-    header("Location: dashboard.php");
-    exit;
+    die("No tienes permisos.");
 }
 
 require_once __DIR__ . '/../app/Config/database.php';
-require_once __DIR__ . '/../app/Models/Vehicle.php';
 require_once __DIR__ . '/../app/Models/Ride.php';
 
 $db = (new Database())->getConnection();
-$vehicleModel = new Vehicle($db);
-$rideModel    = new Ride($db);
+$rideModel = new Ride($db);
 
-// ---------------- OBTENER ID DEL RIDE ----------------
-$rideId = isset($_GET['id']) ? (int)$_GET['id'] : 0;
-
-$ride = $rideModel->findById($rideId);
+$id = $_GET['id'] ?? 0;
+$ride = $rideModel->find($id);
 
 if (!$ride) {
-    die("Ride no encontrado.");
+    die("Ride no encontrado");
 }
 
-// Solo admin o dueño del ride
-if (!$isAdmin && $ride['driver_id'] != $userId) {
-    die("No tienes permiso para editar este ride.");
+// Los choferes no pueden editar rides ajenos
+if ($isDriver && $ride["driver_id"] != $_SESSION["user_id"]) {
+    die("No puedes editar rides que no son tuyos.");
 }
 
-// ---------------- VEHÍCULOS DISPONIBLES ----------------
-$vehicles = $isAdmin 
-    ? $vehicleModel->getAllApproved()
-    : $vehicleModel->getApprovedByUser($userId);
-
-// ---------------- PROCESAR FORMULARIO ----------------
 $message = "";
 $error = "";
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
+    $weekdays = implode(",", $_POST['weekdays'] ?? []);
+
     $data = [
-        "ride_name"          => $_POST["ride_name"] ?? "",
-        "departure_location" => $_POST["departure_location"] ?? "",
-        "departure_time"     => $_POST["departure_time"] ?? "",
-        "arrival_location"   => $_POST["arrival_location"] ?? "",
-        "arrival_time"       => $_POST["arrival_time"] ?? "",
-        "weekdays"           => isset($_POST["weekdays"]) ? implode(",", $_POST["weekdays"]) : "",
-        "price_per_seat"     => $_POST["price_per_seat"] ?? 0,
-        "total_seats"        => $_POST["total_seats"] ?? 1,
-        "vehicle_id"         => $_POST["vehicle_id"] ?? null,
+        "ride_name"         => $_POST["ride_name"],
+        "departure_location"=> $_POST["departure_location"],
+        "departure_time"    => $_POST["departure_time"],
+        "arrival_location"  => $_POST["arrival_location"],
+        "arrival_time"      => $_POST["arrival_time"],
+        "weekdays"          => $weekdays,
+        "price_per_seat"    => $_POST["price_per_seat"],
+        "total_seats"       => $_POST["total_seats"],
+        "available_seats"   => $_POST["available_seats"],
     ];
 
-    if ($rideModel->update($rideId, $data)) {
-        $message = "Ride actualizado correctamente.";
-        $ride = $rideModel->findById($rideId);  // refrescar
+    $ok = $rideModel->update($id, $data);
+
+    if ($ok) {
+        header("Location: rides.php?updated=1");
+        exit;
     } else {
-        $error = "Error al actualizar el ride.";
+        $error = "No se pudo actualizar.";
     }
 }
 
-// ---------------- DATOS PARA NAVBAR ----------------
-$firstName = $_SESSION['first_name'] ?? "Usuario";
-$photoPath = $_SESSION['photo'] ?? null;
+// NAVBAR INFO
+$firstName = $_SESSION['first_name'];
+$photo     = $_SESSION['photo'] ?? null;
 $initial   = strtoupper(substr($firstName, 0, 1));
 ?>
-
 <!DOCTYPE html>
-<html lang="es">
+<html>
 <head>
 <meta charset="UTF-8">
-<title>Editar Ride - Aventones</title>
+<title>Editar Viaje</title>
 <link rel="stylesheet" href="css/styles.css">
-
 <style>
-.form-container {
-    max-width: 800px;
-    margin: 24px auto;
-    padding: 20px;
-}
-.form-row {
-    display: flex; 
-    gap: 16px;
-    flex-wrap: wrap;
-}
-.form-row > div {
-    flex: 1;
-    min-width: 250px;
-}
-.form-group {
-    margin-bottom: 12px;
-}
-.weekdays-box {
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-}
+.form-card {padding:20px;background:white;border-radius:12px;max-width:900px;margin:auto;}
 </style>
-
 </head>
 <body>
 
-<!-- NAVBAR -->
-<nav class="navbar-custom" style="padding: 12px 24px; display:flex; justify-content:space-between; align-items:center;">
-    <div style="font-size:20px; font-weight:700; color:white;">Aventones</div>
+<nav class="navbar-custom" style="padding:14px 24px;display:flex;justify-content:space-between;">
+    <div style="color:white;font-size:20px;font-weight:bold;">Editar Viaje</div>
 
     <div class="user-menu-container">
-        <button class="user-avatar-button" id="userMenuButton">
-            <?php if ($photoPath): ?>
-                <img src="<?php echo $photoPath; ?>" class="user-avatar">
+        <button id="userMenuButton" class="user-avatar-button">
+            <?php if ($photo): ?>
+                <img src="<?= $photo ?>" class="user-avatar">
             <?php else: ?>
-                <div class="user-avatar-placeholder"><?php echo $initial; ?></div>
+                <div class="user-avatar-placeholder"><?= $initial ?></div>
             <?php endif; ?>
-            <span class="user-name-label"><?php echo htmlspecialchars($firstName); ?></span>
+            <span class="user-name-label"><?= $firstName ?></span>
             <span class="user-chevron">▾</span>
         </button>
 
@@ -138,98 +104,66 @@ $initial   = strtoupper(substr($firstName, 0, 1));
     </div>
 </nav>
 
-<div class="form-container card-custom">
 
-    <a href="rides.php" class="btn-back">← Volver a mis rides</a>
+<div class="form-card">
 
-    <h2 style="margin-bottom:12px;">Editar Ride</h2>
+    <a href="rides.php" class="btn-back">← Volver</a>
 
-    <?php if ($message): ?>
-        <div class="alert alert-success"><?php echo $message; ?></div>
-    <?php endif; ?>
+    <h2>Editar viaje</h2>
 
     <?php if ($error): ?>
-        <div class="alert alert-error"><?php echo $error; ?></div>
+        <div class="alert-error"><?= $error ?></div>
     <?php endif; ?>
 
     <form method="POST">
 
-        <div class="form-group">
-            <label class="form-label">Nombre del viaje</label>
-            <input type="text" class="form-control" name="ride_name" value="<?php echo htmlspecialchars($ride['ride_name']); ?>" required>
+        <label>Nombre del viaje</label>
+        <input type="text" name="ride_name" value="<?= $ride["ride_name"] ?>" required>
+
+        <label>Lugar de salida</label>
+        <input type="text" name="departure_location" value="<?= $ride["departure_location"] ?>" required>
+
+        <label>Hora de salida</label>
+        <input type="time" name="departure_time" value="<?= $ride["departure_time"] ?>" required>
+
+        <label>Lugar de llegada</label>
+        <input type="text" name="arrival_location" value="<?= $ride["arrival_location"] ?>" required>
+
+        <label>Hora de llegada</label>
+        <input type="time" name="arrival_time" value="<?= $ride["arrival_time"] ?>" required>
+
+        <label>Días de la semana</label>
+        <?php
+            $days = ["monday","tuesday","wednesday","thursday","friday","saturday","sunday"];
+            $selected = explode(",", $ride["weekdays"]);
+        ?>
+        <div style="display:flex;flex-wrap:wrap;gap:10px;">
+        <?php foreach ($days as $d): ?>
+            <label>
+                <input type="checkbox" name="weekdays[]" value="<?= $d ?>"
+                    <?= in_array($d,$selected) ? "checked" : "" ?>> <?= ucfirst($d) ?>
+            </label>
+        <?php endforeach; ?>
         </div>
 
-        <div class="form-row">
-            <div class="form-group">
-                <label class="form-label">Lugar de salida</label>
-                <input type="text" class="form-control" name="departure_location" value="<?php echo htmlspecialchars($ride['departure_location']); ?>" required>
-            </div>
+        <label>Precio por asiento</label>
+        <input type="number" name="price_per_seat" value="<?= $ride["price_per_seat"] ?>" required>
 
-            <div class="form-group">
-                <label class="form-label">Hora de salida</label>
-                <input type="time" class="form-control" name="departure_time" value="<?php echo htmlspecialchars($ride['departure_time']); ?>" required>
-            </div>
-        </div>
+        <label>Total de asientos</label>
+        <input type="number" name="total_seats" value="<?= $ride["total_seats"] ?>" required>
 
-        <div class="form-row">
-            <div class="form-group">
-                <label class="form-label">Lugar de llegada</label>
-                <input type="text" class="form-control" name="arrival_location" value="<?php echo htmlspecialchars($ride['arrival_location']); ?>" required>
-            </div>
+        <label>Asientos disponibles</label>
+        <input type="number" name="available_seats" value="<?= $ride["available_seats"] ?>" required>
 
-            <div class="form-group">
-                <label class="form-label">Hora de llegada</label>
-                <input type="time" class="form-control" name="arrival_time" value="<?php echo htmlspecialchars($ride['arrival_time']); ?>" required>
-            </div>
-        </div>
-
-        <div class="form-group">
-            <label class="form-label">Días de la semana</label>
-            <div class="weekdays-box">
-                <?php
-                $days = ["monday"=>"Lun", "tuesday"=>"Mar", "wednesday"=>"Mié", "thursday"=>"Jue", "friday"=>"Vie", "saturday"=>"Sáb", "sunday"=>"Dom"];
-                $selected = explode(",", $ride["weekdays"]);
-                foreach ($days as $value => $label):
-                ?>
-                    <label>
-                        <input type="checkbox" name="weekdays[]" value="<?php echo $value; ?>"
-                            <?php echo in_array($value, $selected) ? "checked" : ""; ?>>
-                        <?php echo $label; ?>
-                    </label>
-                <?php endforeach; ?>
-            </div>
-        </div>
-
-        <div class="form-row">
-            <div class="form-group">
-                <label class="form-label">Precio por asiento</label>
-                <input type="number" class="form-control" name="price_per_seat" value="<?php echo htmlspecialchars($ride['price_per_seat']); ?>" min="0" required>
-            </div>
-
-            <div class="form-group">
-                <label class="form-label">Cantidad de espacios</label>
-                <input type="number" class="form-control" name="total_seats" value="<?php echo htmlspecialchars($ride['total_seats']); ?>" min="1" required>
-            </div>
-        </div>
-
-        <div class="form-group">
-            <label class="form-label">Vehículo</label>
-            <select name="vehicle_id" class="form-control" required>
-                <?php foreach ($vehicles as $v): ?>
-                    <option value="<?php echo $v['id']; ?>"
-                        <?php echo ($v['id'] == $ride['vehicle_id']) ? 'selected' : ''; ?>>
-                        <?php echo htmlspecialchars($v['brand'].' '.$v['model'].' ('.$v['plate'].')'); ?>
-                    </option>
-                <?php endforeach; ?>
-            </select>
-        </div>
-
-        <button class="btn-primary-custom">Guardar cambios</button>
+        <br><br>
+        <button class="btn-primary-custom" type="submit">Guardar cambios</button>
 
     </form>
+
 </div>
 
-<script src="js/theme.js"></script>
 <script src="js/user-menu.js"></script>
+<script src="js/theme.js"></script>
+
 </body>
 </html>

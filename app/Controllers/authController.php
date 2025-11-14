@@ -9,76 +9,56 @@ class AuthController
 
     public function __construct()
     {
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+
         $database = new Database();
         $this->db = $database->getConnection();
         $this->userModel = new User($this->db);
     }
 
-    public function register($data)
+    public function login(string $username, string $password): array
     {
-        // Validar que las contraseñas coincidan
-        if ($data['password'] !== $data['password_confirm']) {
-            return ['success' => false, 'message' => 'Las contraseñas no coinciden'];
+        if (empty($username) || empty($password)) {
+            return [
+                'success' => false,
+                'message' => 'Credenciales incompletas'
+            ];
         }
 
-        // Hash de la contraseña
-        $data['password'] = password_hash($data['password'], PASSWORD_DEFAULT);
-
-        // Registrar usuario
-        $userId = $this->userModel->create($data);
-
-        if ($userId) {
-            // Asignar rol de pasajero por defecto
-            $this->userModel->assignRole($userId, 2); // 2 = Pasajero
-            return ['success' => true, 'message' => 'Usuario registrado exitosamente', 'user_id' => $userId];
-        }
-
-        return ['success' => false, 'message' => 'Error al registrar usuario'];
-    }
-
-    public function login($username, $password)
-    {
+        // Buscar usuario
         $user = $this->userModel->findByUsername($username);
 
-        if ($user && password_verify($password, $user['password'])) {
-            // Iniciar sesión
-            session_start();
-            $_SESSION['user_id'] = $user['id'];
-            $_SESSION['username'] = $user['username'];
-            $_SESSION['first_name'] = $user['first_name'];
-            $_SESSION['photo'] = $user['photo'] ?? null; // 👈 NUEVO
-
-            // Obtener roles del usuario
-            $roles = $this->userModel->getUserRoles($user['id']);
-            $_SESSION['roles'] = $roles;
-
-            return ['success' => true, 'message' => 'Inicio de sesión exitoso', 'roles' => $roles];
+        if (!$user) {
+            return [
+                'success' => false,
+                'message' => 'Usuario no encontrado'
+            ];
         }
 
-        return ['success' => false, 'message' => 'Usuario o contraseña incorrectos'];
-    }
-
-
-    public function logout()
-    {
-        session_start();
-        session_destroy();
-        return ['success' => true, 'message' => 'Sesión cerrada'];
-    }
-
-    public function checkAuth()
-    {
-        session_start();
-        return isset($_SESSION['user_id']);
-    }
-
-    public function hasRole($roleId)
-    {
-        session_start();
-        if (!isset($_SESSION['roles'])) {
-            return false;
+        // Verificar contraseña
+        if (!password_verify($password, $user['password'])) {
+            return [
+                'success' => false,
+                'message' => 'Contraseña incorrecta'
+            ];
         }
-        return in_array($roleId, array_column($_SESSION['roles'], 'role_id'));
+
+        // Cargar roles
+        $roles = $this->userModel->getUserRoles($user['id']);
+
+        // Guardar en sesión
+        $_SESSION['user_id'] = $user['id'];
+        $_SESSION['first_name'] = $user['first_name'];
+        $_SESSION['username'] = $user['username'];
+        $_SESSION['photo'] = $user['photo'] ?? null;
+        $_SESSION['roles'] = $roles;
+
+        return [
+            'success' => true,
+            'message' => 'Login correcto',
+            'roles' => $roles
+        ];
     }
 }
-?>

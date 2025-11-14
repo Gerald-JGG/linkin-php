@@ -22,6 +22,7 @@ require_once __DIR__ . '/../app/Models/user.php';
 $db = (new Database())->getConnection();
 $userModel = new User($db);
 
+// ESTA ES LA CORRECTA
 $users = $userModel->getAll();
 
 // Datos del admin para navbar
@@ -117,13 +118,13 @@ body.dark-mode .btn-back {
 
 <div class="list-wrapper">
 
-<?php foreach ($users as $u):
+<?php foreach ($users as $u): ?>
 
-    // ocultar admins
-    $isUserAdmin = str_contains($u['roles'] ?? '', 'Admin');
-    if ($isUserAdmin) continue;
+    <?php 
+        // ocultar admins
+        if (str_contains($u['roles'] ?? '', 'Administrador')) continue; 
+    ?>
 
-?>
     <div class="user-card">
         <h3><?php echo htmlspecialchars($u['first_name'].' '.$u['last_name']); ?></h3>
         <p><strong>@<?php echo htmlspecialchars($u['username']); ?></strong></p>

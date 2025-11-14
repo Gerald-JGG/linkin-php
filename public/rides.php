@@ -1,21 +1,19 @@
 <?php
 session_start();
 
+// Si no está logueado → fuera
 if (!isset($_SESSION['user_id'])) {
-    header("Location: login.php");
+    header('Location: login.php');
     exit;
 }
 
-$userId   = $_SESSION['user_id'];
-$roles    = $_SESSION['roles'] ?? [];
-$roleIds  = array_column($roles, 'role_id');
-$isAdmin  = in_array(1, $roleIds);
-$isDriver = in_array(3, $roleIds);
+// Roles desde sesión
+$roles   = $_SESSION['roles'] ?? [];
+$roleIds = array_column($roles, 'role_id');
 
-if (!$isAdmin && !$isDriver) {
-    header("Location: dashboard.php");
-    exit;
-}
+$isAdmin     = in_array(1, $roleIds);
+$isPassenger = in_array(2, $roleIds);
+$isDriver    = in_array(3, $roleIds);
 
 require_once __DIR__ . '/../app/Config/database.php';
 require_once __DIR__ . '/../app/Models/Ride.php';
@@ -23,78 +21,95 @@ require_once __DIR__ . '/../app/Models/Ride.php';
 $db = (new Database())->getConnection();
 $rideModel = new Ride($db);
 
-// Admin = puede ver todos
-$rides = $isAdmin 
-    ? $rideModel->getAll()
-    : $rideModel->getByDriver($userId);
+// Rides según el rol
+if ($isAdmin) {
+    $rides = $rideModel->getAllRidesAdmin();
+} elseif ($isDriver) {
+    $rides = $rideModel->getByDriver($_SESSION['user_id']);
+} else {
+    $rides = []; // Pasajero no gestiona rides aquí
+}
 
-// Navbar info
-$firstName = $_SESSION['first_name'] ?? "Usuario";
-$photoPath = $_SESSION['photo'] ?? null;
-$initial   = strtoupper(substr($firstName, 0, 1));
+// Navbar
+$firstName = $_SESSION['first_name'] ?? $_SESSION['username'] ?? "Usuario";
+$photo = $_SESSION['photo'] ?? null;
+$initial = strtoupper(substr($firstName, 0, 1));
 ?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<title>Mis Rides</title>
-<link rel="stylesheet" href="css/styles.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mis viajes - Aventones</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <style>
 
-<style>
-.page-container {
-    max-width: 1000px;
-    margin: 24px auto;
-    padding: 16px;
-}
+        .page-container {
+            max-width: 1100px;
+            margin: 24px auto;
+            padding: 0 16px;
+        }
 
-.table-custom {
-    width:100%;
-    border-collapse: collapse;
-}
-.table-custom th, .table-custom td {
-    padding:12px;
-    border-bottom:1px solid #e5e7eb;
-}
-body.dark-mode .table-custom td, 
-body.dark-mode .table-custom th {
-    border-bottom:1px solid #334155;
-}
+        .ride-card {
+            padding:18px;
+            background:white;
+            border-radius:12px;
+            margin-bottom:14px;
+            box-shadow:0 2px 8px rgba(0,0,0,0.08);
+        }
+        body.dark-mode .ride-card {
+            background:#0f172a;
+            color:#f1f5f9;
+        }
 
-.btn-small {
-    padding:6px 12px;
-    border-radius:6px;
-    font-size:13px;
-    display:inline-block;
-}
-.btn-edit {
-    background:#2563eb;
-    color:white;
-}
-.btn-delete {
-    background:#dc2626;
-    color:white;
-}
-.btn-create {
-    background:#059669;
-    color:white;
-    padding:10px 18px;
-    border-radius:8px;
-    font-weight:600;
-    text-decoration:none;
-}
-</style>
+        .btn-create {
+            display:inline-block;
+            background:#2563eb;
+            color:white;
+            padding:10px 16px;
+            border-radius:8px;
+            text-decoration:none;
+            font-weight:600;
+        }
+        .btn-edit, .btn-delete {
+            display:inline-block;
+            padding:8px 14px;
+            border-radius:8px;
+            font-weight:600;
+            text-decoration:none;
+            font-size:14px;
+        }
+        .btn-edit { background:#2563eb; color:white; }
+        .btn-delete { background:#dc2626; color:white; }
 
+        .btn-back {
+            display:inline-block;
+            padding:8px 16px;
+            margin-bottom:18px;
+            background:#e5e7eb;
+            border-radius:8px;
+            text-decoration:none;
+            font-weight:600;
+        }
+        body.dark-mode .btn-back {
+            background:#1f2937;
+            color:#e5e7eb;
+        }
+    </style>
 </head>
+
 <body>
 
 <!-- NAVBAR -->
-<nav class="navbar-custom" style="padding: 12px 24px; display:flex; justify-content:space-between; align-items:center;">
-    <div style="font-size:20px; font-weight:700; color:white;">Aventones</div>
+<nav class="navbar-custom" style="padding: 12px 24px; display:flex; justify-content:space-between;">
+    <div style="color:white; font-size:20px; font-weight:bold;">
+        Aventones
+    </div>
 
     <div class="user-menu-container">
         <button class="user-avatar-button" id="userMenuButton">
-            <?php if ($photoPath): ?>
-                <img src="<?php echo $photoPath; ?>" class="user-avatar">
+            <?php if ($photo): ?>
+                <img src="<?php echo htmlspecialchars($photo); ?>" class="user-avatar">
             <?php else: ?>
                 <div class="user-avatar-placeholder"><?php echo $initial; ?></div>
             <?php endif; ?>
@@ -114,54 +129,55 @@ body.dark-mode .table-custom th {
 
 <div class="page-container">
 
-    <h2 style="margin-bottom:16px;">Mis Rides</h2>
+    <a href="dashboard.php" class="btn-back">← Volver al panel</a>
 
-    <a class="btn-create" href="create-ride.php">➕ Crear ride</a>
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+        <h2>Mis viajes</h2>
 
-    <?php if (isset($_GET['deleted'])): ?>
-        <div class="alert alert-success" style="margin-top:16px;">
-            Ride eliminado correctamente.
-        </div>
-    <?php endif; ?>
+        <?php if ($isAdmin || $isDriver): ?>
+            <a href="create-ride.php" class="btn-create">+ Crear viaje</a>
+        <?php endif; ?>
+    </div>
 
-    <table class="table-custom" style="margin-top:20px;">
-        <thead>
-            <tr>
-                <th>Nombre</th>
-                <th>Salida</th>
-                <th>Llegada</th>
-                <th>Días</th>
-                <th>Vehículo</th>
-                <th>Precio</th>
-                <th>Asientos</th>
-                <th>Acciones</th>
-            </tr>
-        </thead>
-        <tbody>
-
+    <?php if (empty($rides)): ?>
+        <p style="color:gray;">No tienes viajes registrados.</p>
+    <?php else: ?>
         <?php foreach ($rides as $r): ?>
-            <tr>
-                <td><?php echo htmlspecialchars($r['ride_name']); ?></td>
-                <td><?php echo htmlspecialchars($r['departure_location']); ?></td>
-                <td><?php echo htmlspecialchars($r['arrival_location']); ?></td>
-                <td><?php echo htmlspecialchars($r['weekdays']); ?></td>
-                <td><?php echo htmlspecialchars($r['vehicle_info']); ?></td>
-                <td><?php echo htmlspecialchars($r['price_per_seat']); ?></td>
-                <td><?php echo htmlspecialchars($r['available_seats']."/".$r['total_seats']); ?></td>
+            <div class="ride-card">
+                <h3><?php echo htmlspecialchars($r['ride_name']); ?></h3>
 
-                <td>
-                    <a class="btn-small btn-edit" href="edit-ride.php?id=<?php echo $r['id']; ?>">Editar</a>
-                    <a class="btn-small btn-delete" href="delete-ride.php?id=<?php echo $r['id']; ?>">Eliminar</a>
-                </td>
-            </tr>
+                <p>
+                    <strong>Salida:</strong> <?= htmlspecialchars($r['departure_location']); ?>
+                    (<?= $r['departure_time']; ?>)<br>
+
+                    <strong>Llegada:</strong> <?= htmlspecialchars($r['arrival_location']); ?>
+                    (<?= $r['arrival_time']; ?>)
+                </p>
+
+                <p style="font-size:14px; color:gray;">
+                    <strong>Días:</strong> <?= htmlspecialchars($r['weekdays']); ?><br>
+                    <strong>Asientos:</strong> <?= $r['available_seats']; ?>/<?= $r['total_seats']; ?>
+                </p>
+
+                <?php if ($isAdmin || ($isDriver && $r['driver_id'] == $_SESSION['user_id'])): ?>
+                    <div style="margin-top:10px;">
+                        <a class="btn-edit" href="edit-ride.php?id=<?= $r['id']; ?>">Editar</a>
+                        <a class="btn-delete"
+                           href="delete-ride.php?id=<?= $r['id']; ?>"
+                           onclick="return confirm('¿Eliminar este viaje?');">
+                           Eliminar
+                        </a>
+                    </div>
+                <?php endif; ?>
+
+            </div>
         <?php endforeach; ?>
-
-        </tbody>
-    </table>
+    <?php endif; ?>
 
 </div>
 
 <script src="js/theme.js"></script>
 <script src="js/user-menu.js"></script>
+
 </body>
 </html>

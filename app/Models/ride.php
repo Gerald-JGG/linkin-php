@@ -1,167 +1,126 @@
 <?php
-session_start();
 
-if (!isset($_SESSION['user_id'])) {
-    header("Location: login.php");
-    exit;
+require_once __DIR__ . '/../Config/database.php';
+
+class Ride {
+    private $conn;
+    private $table = 'rides';
+
+    public function __construct($db) {
+        $this->conn = $db;
+    }
+
+    /** Obtener todos los rides (solo para admin) */
+    public function getAllRidesAdmin(): array {
+        $sql = "SELECT r.*, 
+                CONCAT(u.first_name, ' ', u.last_name) AS driver_name,
+                CONCAT(v.brand, ' ', v.model, ' - ', v.plate) AS vehicle_info
+                FROM rides r 
+                JOIN users u ON r.driver_id = u.id
+                JOIN vehicles v ON r.vehicle_id = v.id
+                ORDER BY r.id DESC";
+
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /** Rides de un chofer */
+    public function getByDriver($driverId): array {
+        $sql = "SELECT r.*, 
+                CONCAT(v.brand,' ',v.model,' - ',v.plate) AS vehicle_info
+                FROM rides r
+                JOIN vehicles v ON r.vehicle_id = v.id
+                WHERE r.driver_id = :id
+                ORDER BY r.id DESC";
+
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bindParam(':id', $driverId);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /** Rides disponibles para búsqueda */
+    public function getAvailableForSearch(): array {
+        $sql = "SELECT r.*, 
+                u.first_name AS driver_first_name, 
+                u.last_name AS driver_last_name,
+                v.brand, v.model, v.color, v.plate
+                FROM rides r
+                JOIN users u ON r.driver_id = u.id
+                JOIN vehicles v ON r.vehicle_id = v.id
+                WHERE r.available_seats > 0
+                ORDER BY r.departure_time ASC";
+
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /** Crear ride */
+    public function create($data) {
+        $sql = "INSERT INTO rides 
+                (driver_id, vehicle_id, ride_name, departure_location, departure_time, 
+                 arrival_location, arrival_time, weekdays, price_per_seat, 
+                 total_seats, available_seats)
+                VALUES 
+                (:driver_id, :vehicle_id, :ride_name, :departure_location, :departure_time,
+                 :arrival_location, :arrival_time, :weekdays, :price_per_seat,
+                 :total_seats, :available_seats)";
+
+        $stmt = $this->conn->prepare($sql);
+
+        $stmt->execute([
+            ':driver_id' => $data['driver_id'],
+            ':vehicle_id' => $data['vehicle_id'],
+            ':ride_name' => $data['ride_name'],
+            ':departure_location' => $data['departure_location'],
+            ':departure_time' => $data['departure_time'],
+            ':arrival_location' => $data['arrival_location'],
+            ':arrival_time' => $data['arrival_time'],
+            ':weekdays' => $data['weekdays'],
+            ':price_per_seat' => $data['price_per_seat'],
+            ':total_seats' => $data['total_seats'],
+            ':available_seats' => $data['available_seats']
+        ]);
+
+        return $this->conn->lastInsertId();
+    }
+
+    /** Update */
+    public function update($id, $data) {
+        $sql = "UPDATE rides SET
+                ride_name = :ride_name,
+                departure_location = :departure_location,
+                departure_time = :departure_time,
+                arrival_location = :arrival_location,
+                arrival_time = :arrival_time,
+                weekdays = :weekdays,
+                price_per_seat = :price_per_seat,
+                total_seats = :total_seats,
+                available_seats = :available_seats
+                WHERE id = :id";
+
+        $stmt = $this->conn->prepare($sql);
+
+        return $stmt->execute([
+            ':id' => $id,
+            ':ride_name' => $data['ride_name'],
+            ':departure_location' => $data['departure_location'],
+            ':departure_time' => $data['departure_time'],
+            ':arrival_location' => $data['arrival_location'],
+            ':arrival_time' => $data['arrival_time'],
+            ':weekdays' => $data['weekdays'],
+            ':price_per_seat' => $data['price_per_seat'],
+            ':total_seats' => $data['total_seats'],
+            ':available_seats' => $data['available_seats']
+        ]);
+    }
+
+    /** Eliminar */
+    public function delete($id) {
+        $sql = "DELETE FROM rides WHERE id = :id";
+        $stmt = $this->conn->prepare($sql);
+        return $stmt->execute([':id' => $id]);
+    }
 }
-
-$userId   = $_SESSION['user_id'];
-$roles    = $_SESSION['roles'] ?? [];
-$roleIds  = array_column($roles, 'role_id');
-$isAdmin  = in_array(1, $roleIds);
-$isDriver = in_array(3, $roleIds);
-
-if (!$isAdmin && !$isDriver) {
-    header("Location: dashboard.php");
-    exit;
-}
-
-require_once __DIR__ . '/../app/Config/database.php';
-require_once __DIR__ . '/../app/Models/Ride.php';
-
-$db = (new Database())->getConnection();
-$rideModel = new Ride($db);
-
-// Admin = puede ver todos
-$rides = $isAdmin 
-    ? $rideModel->getAll()
-    : $rideModel->getByDriver($userId);
-
-// Navbar info
-$firstName = $_SESSION['first_name'] ?? "Usuario";
-$photoPath = $_SESSION['photo'] ?? null;
-$initial   = strtoupper(substr($firstName, 0, 1));
-?>
-<!DOCTYPE html>
-<html lang="es">
-<head>
-<meta charset="UTF-8">
-<title>Mis Rides</title>
-<link rel="stylesheet" href="css/styles.css">
-
-<style>
-.page-container {
-    max-width: 1000px;
-    margin: 24px auto;
-    padding: 16px;
-}
-
-.table-custom {
-    width:100%;
-    border-collapse: collapse;
-}
-.table-custom th, .table-custom td {
-    padding:12px;
-    border-bottom:1px solid #e5e7eb;
-}
-body.dark-mode .table-custom td, 
-body.dark-mode .table-custom th {
-    border-bottom:1px solid #334155;
-}
-
-.btn-small {
-    padding:6px 12px;
-    border-radius:6px;
-    font-size:13px;
-    display:inline-block;
-}
-.btn-edit {
-    background:#2563eb;
-    color:white;
-}
-.btn-delete {
-    background:#dc2626;
-    color:white;
-}
-.btn-create {
-    background:#059669;
-    color:white;
-    padding:10px 18px;
-    border-radius:8px;
-    font-weight:600;
-    text-decoration:none;
-}
-</style>
-
-</head>
-<body>
-
-<!-- NAVBAR -->
-<nav class="navbar-custom" style="padding: 12px 24px; display:flex; justify-content:space-between; align-items:center;">
-    <div style="font-size:20px; font-weight:700; color:white;">Aventones</div>
-
-    <div class="user-menu-container">
-        <button class="user-avatar-button" id="userMenuButton">
-            <?php if ($photoPath): ?>
-                <img src="<?php echo $photoPath; ?>" class="user-avatar">
-            <?php else: ?>
-                <div class="user-avatar-placeholder"><?php echo $initial; ?></div>
-            <?php endif; ?>
-            <span class="user-name-label"><?php echo htmlspecialchars($firstName); ?></span>
-            <span class="user-chevron">▾</span>
-        </button>
-
-        <div class="user-menu" id="userMenu">
-            <a href="dashboard.php">Panel</a>
-            <a href="profile.php">Mi perfil</a>
-            <a href="settings.php">Configuración</a>
-            <hr>
-            <a href="api/logout.php">Salir</a>
-        </div>
-    </div>
-</nav>
-
-<div class="page-container">
-
-    <h2 style="margin-bottom:16px;">Mis Rides</h2>
-
-    <a class="btn-create" href="create-ride.php">➕ Crear ride</a>
-
-    <?php if (isset($_GET['deleted'])): ?>
-        <div class="alert alert-success" style="margin-top:16px;">
-            Ride eliminado correctamente.
-        </div>
-    <?php endif; ?>
-
-    <table class="table-custom" style="margin-top:20px;">
-        <thead>
-            <tr>
-                <th>Nombre</th>
-                <th>Salida</th>
-                <th>Llegada</th>
-                <th>Días</th>
-                <th>Vehículo</th>
-                <th>Precio</th>
-                <th>Asientos</th>
-                <th>Acciones</th>
-            </tr>
-        </thead>
-        <tbody>
-
-        <?php foreach ($rides as $r): ?>
-            <tr>
-                <td><?php echo htmlspecialchars($r['ride_name']); ?></td>
-                <td><?php echo htmlspecialchars($r['departure_location']); ?></td>
-                <td><?php echo htmlspecialchars($r['arrival_location']); ?></td>
-                <td><?php echo htmlspecialchars($r['weekdays']); ?></td>
-                <td><?php echo htmlspecialchars($r['vehicle_info']); ?></td>
-                <td><?php echo htmlspecialchars($r['price_per_seat']); ?></td>
-                <td><?php echo htmlspecialchars($r['available_seats']."/".$r['total_seats']); ?></td>
-
-                <td>
-                    <a class="btn-small btn-edit" href="edit-ride.php?id=<?php echo $r['id']; ?>">Editar</a>
-                    <a class="btn-small btn-delete" href="delete-ride.php?id=<?php echo $r['id']; ?>">Eliminar</a>
-                </td>
-            </tr>
-        <?php endforeach; ?>
-
-        </tbody>
-    </table>
-
-</div>
-
-<script src="js/theme.js"></script>
-<script src="js/user-menu.js"></script>
-</body>
-</html>
